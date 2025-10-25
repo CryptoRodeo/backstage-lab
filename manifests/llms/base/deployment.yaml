@@ -1,0 +1,54 @@
+#==============================
+# Ollama
+#==============================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage-test-llms
+  namespace: backstage-llms
+  labels:
+    app: backstage-test-llms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backstage-test-llms
+  template:
+    metadata:
+      labels:
+        app: backstage-test-llms
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      initContainers:
+        - name: preload-modals
+          image: ollama/ollama:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ollama serve &&
+              sleep 5
+              ollama pull tinyllama:latest
+              ollama pull llama3:8b-instruct
+              ollama pull codellama:7b
+              kill $(pgrep ollama)
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          ports:
+            - name: ollama-host
+              containerPort: 11434
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+      volumes:
+        - name: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-data
+---
+#==============================
+# Open Web UI
+#==============================
+

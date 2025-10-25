@@ -39,7 +39,7 @@ spec:
               echo "[init] starting ollama serve..." ; ollama serve & SERVER_PID=$!
               sleep 5
               echo "[init] Pulling tinyllama:latest..." ; ollama pull tinyllama:latest
-              echo "[init] Pulling llama3:8b-instruct..." ; ollama pull llama3:8b-instruct
+              echo "[init] Pulling llama3:8b..." ; ollama pull llama3:8b
               echo "[init] Pulling codellama:7b..." ; ollama pull codellama:7b
               echo "[init] stopping ollama (pid=$SERVER_PID)" ; kill "$SERVER_PID" || true
           volumeMounts:

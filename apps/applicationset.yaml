@@ -1,27 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: backstage-test-apps
+  name: apps
   namespace: argocd
 spec:
   generators:
     - git:
-      repoUrl: https://github.com/CryptoRodeo/backstage-test-data.git
-      revision: main
-      directories:
-        - path: manifests/*/overlays/*
+        repoURL: https://github.com/CryptoRodeo/backstage-test-data.git
+        revision: main
+        directories:
+          - path: manifests/*/overlays/*
   template:
     metadata:
-      name: 'backstage-{{path.basename}}'
+      name: '{{path[1]}}-{{path.basename}}'
     spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
         namespace: 'backstage-{{path[1]}}' # e.g. tekton from manifests/tekton/overlays/default
-      sources:
-        - repoURL: https://github.com/CryptoRodeo/backstage-test-data.git
-          targetRevision: main
-          path: '{{path}}'
+      source:
+        repoURL: https://github.com/CryptoRodeo/backstage-test-data.git
+        targetRevision: main
+        path: '{{path}}'
       syncPolicy:
         automated:
           prune: true

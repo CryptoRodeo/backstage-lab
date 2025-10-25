@@ -35,13 +35,13 @@ spec:
               mountPath: /var/jenkins_home
           readinessProbe:
             httpGet:
-              path: /login
+              path: /
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /login
+              path: /
               port: http
             initialDelaySeconds: 60
             periodSeconds: 20

@@ -181,13 +181,13 @@ spec:
           value: rollout-bluegreen-active
   selector:
     matchLabels:
-      app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match template
-      app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+      app: bluegreen-demo 
+      app.kubernetes.io/instance: basic-app-with-rollouts 
   template:
     metadata:
       labels:
-        app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match services
-        app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+        app: bluegreen-demo
+        app.kubernetes.io/instance: basic-app-with-rollouts  
         backstage.io/kubernetes-id: rollouts-bluegreen-test
     spec:
       # REMOVED: serviceAccountName to avoid permission issues
@@ -225,7 +225,7 @@ metadata:
   name: rollout-canary-stable
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app.kubernetes.io/instance: basic-app-with-rollouts  
     backstage.io/kubernetes-id: guestbook
     backstage.io/test-resource: "true"
 spec:
@@ -235,8 +235,8 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: canary-demo  # FIXED: Changed from rollout-canary to match pods
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app: canary-demo  
+    app.kubernetes.io/instance: basic-app-with-rollouts  
 
 ---
 apiVersion: v1
@@ -245,7 +245,7 @@ metadata:
   name: rollout-canary-canary
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app.kubernetes.io/instance: basic-app-with-rollouts
     backstage.io/kubernetes-id: guestbook
     backstage.io/test-resource: "true"
 spec:
@@ -255,8 +255,8 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: canary-demo  # FIXED: Changed from rollout-canary to match pods
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app: canary-demo  
+    app.kubernetes.io/instance: basic-app-with-rollouts
 
 ---
 # =======================================================================
@@ -268,7 +268,7 @@ metadata:
   name: rollout-bluegreen-active
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app.kubernetes.io/instance: basic-app-with-rollouts 
     backstage.io/kubernetes-id: basic-app
     backstage.io/test-resource: "true"
 spec:
@@ -278,8 +278,8 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match pods
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app: bluegreen-demo
+    app.kubernetes.io/instance: basic-app-with-rollouts
 
 ---
 apiVersion: v1
@@ -288,7 +288,7 @@ metadata:
   name: rollout-bluegreen-preview
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app.kubernetes.io/instance: basic-app-with-rollouts
     backstage.io/kubernetes-id: basic-app
     backstage.io/test-resource: "true"
 spec:
@@ -298,8 +298,8 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match pods
-    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    app: bluegreen-demo
+    app.kubernetes.io/instance: basic-app-with-rollouts
 
 ---
 # =======================================================================
@@ -325,7 +325,6 @@ spec:
         spec:
           template:
             spec:
-              # REMOVED: serviceAccountName to avoid permission issues
               containers:
               - name: success-check
                 image: curlimages/curl:7.85.0
@@ -348,5 +347,4 @@ spec:
                     type: "RuntimeDefault"
               restartPolicy: Never
           backoffLimit: 0
-
 ---

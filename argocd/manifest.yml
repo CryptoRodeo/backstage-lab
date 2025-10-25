@@ -1,0 +1,461 @@
+# =======================================================================
+# NAMESPACE CREATION
+# =======================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-apps
+  labels:
+    name: demo-apps
+    backstage.io/managed-by: rollouts-testing
+---
+
+# =======================================================================
+# CLUSTERROLE
+# =======================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backstage-rollouts-testing
+  labels:
+    backstage.io/rbac: "rollouts-testing"
+rules:
+# Broad permissions like your existing setup
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# Explicit Argo Rollouts permissions for clarity
+- apiGroups:
+  - argoproj.io
+  resources:
+  - rollouts
+  - analysisruns
+  - analysistemplates
+  - experiments
+  - clusteranalysistemplates
+  verbs:
+  - get
+  - list
+  - watch
+# Standard Kubernetes resources that rollouts create
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - configmaps
+  - secrets
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+# Batch resources for analysis runs
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+# =======================================================================
+# SERVICE ACCOUNT
+# =======================================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backstage-rollouts
+  namespace: demo-apps
+  labels:
+    backstage.io/service-account: "rollouts-testing"
+
+---
+# =======================================================================
+# CLUSTERROLEBINDING
+# =======================================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backstage-rollouts-testing-binding
+  labels:
+    backstage.io/rbac: "rollouts-testing"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backstage-rollouts-testing
+subjects:
+- kind: ServiceAccount
+  name: backstage-rollouts
+  namespace: demo-apps
+
+---
+# =======================================================================
+# SERVICE ACCOUNT TOKEN
+# =======================================================================
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: backstage-rollouts-token
+  namespace: demo-apps
+  annotations:
+    kubernetes.io/service-account.name: backstage-rollouts
+  labels:
+    backstage.io/token: "rollouts-testing"
+
+---
+# =======================================================================
+# ARGOCD APPLICATIONS
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    app: backstage
+  name: guestbook
+  namespace: argocd
+spec:
+  destination:
+    namespace: demo-apps
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - path: ./argocd/apps/kustomize-guestbook/
+    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
+    targetRevision: main
+  - path: ./argocd/apps/jsonnet-guestbook-tla/
+    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
+    targetRevision: main
+  - path: ./argocd/apps/jsonnet-guestbook/
+    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  labels:
+    app: backstage
+  name: basic-app
+  namespace: argocd
+spec:
+  destination:
+    namespace: demo-apps
+    server: https://kubernetes.default.svc
+  project: default
+  sources:
+  - path: ./argocd/apps/basic-app/
+    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+# =======================================================================
+# CANARY ROLLOUT FOR TRANSLATION TESTING
+# This will be properly managed and create ReplicaSets
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout-canary-translation-test
+  namespace: demo-apps
+  labels:
+    app.kubernetes.io/instance: basic-app
+    app: rollout-canary
+    backstage.io/kubernetes-id: rollouts-canary-test  # For Backstage discovery
+    backstage.io/test-resource: "true"
+  annotations:
+    rollout.argoproj.io/revision: "1"
+    backstage.io/description: "Canary rollout for testing translations"
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      canaryService: rollout-canary-canary
+      stableService: rollout-canary-stable
+      steps:
+      - setWeight: 20
+      - pause: 
+          duration: 10s
+      - setWeight: 40  
+      - pause:
+          duration: 10s
+      - setWeight: 60
+      - pause:
+          duration: 10s
+      - setWeight: 80
+      - pause:
+          duration: 10s
+      - setWeight: 100
+  selector:
+    matchLabels:
+      app: canary-demo
+      app.kubernetes.io/instance: basic-app-with-rollouts 
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+        app.kubernetes.io/instance: basic-app-with-rollouts 
+        backstage.io/kubernetes-id: rollouts-canary-test
+    spec:
+      containers:
+      - name: rollouts-demo
+        image: argoproj/rollouts-demo:blue
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+          limits:
+            memory: 128Mi
+            cpu: 100m
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 3000
+          seccompProfile:
+            type: "RuntimeDefault"
+
+---
+# =======================================================================
+# BLUE-GREEN ROLLOUT FOR TRANSLATION TESTING
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout-bluegreen-translation-test
+  namespace: demo-apps
+  labels:
+    app.kubernetes.io/instance: basic-app
+    app: rollout-bluegreen
+    backstage.io/kubernetes-id: rollouts-bluegreen-test  # For Backstage discovery
+    backstage.io/test-resource: "true"
+  annotations:
+    rollout.argoproj.io/revision: "1"
+    backstage.io/description: "Blue-Green rollout for testing translations"
+spec:
+  replicas: 2
+  strategy:
+    blueGreen:
+      activeService: rollout-bluegreen-active
+      previewService: rollout-bluegreen-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+      prePromotionAnalysis:
+        templates:
+        - templateName: rollout-success-rate
+        args:
+        - name: service-name
+          value: rollout-bluegreen-preview
+      postPromotionAnalysis:
+        templates:
+        - templateName: rollout-success-rate
+        args:
+        - name: service-name
+          value: rollout-bluegreen-active
+  selector:
+    matchLabels:
+      app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match template
+      app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+  template:
+    metadata:
+      labels:
+        app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match services
+        app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+        backstage.io/kubernetes-id: rollouts-bluegreen-test
+    spec:
+      # REMOVED: serviceAccountName to avoid permission issues
+      containers:
+      - name: rollouts-demo
+        image: argoproj/rollouts-demo:blue
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+          limits:
+            memory: 128Mi
+            cpu: 100m
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 3000
+          seccompProfile:
+            type: "RuntimeDefault"
+
+---
+# =======================================================================
+# SERVICES FOR CANARY ROLLOUT
+# =======================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-canary-stable
+  namespace: demo-apps
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: guestbook
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: canary-demo  # FIXED: Changed from rollout-canary to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-canary-canary
+  namespace: demo-apps
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: guestbook
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: canary-demo  # FIXED: Changed from rollout-canary to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+# =======================================================================
+# SERVICES FOR BLUE-GREEN ROLLOUT
+# =======================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-bluegreen-active
+  namespace: demo-apps
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: basic-app
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-bluegreen-preview
+  namespace: demo-apps
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: basic-app
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+# =======================================================================
+# ANALYSIS TEMPLATE FOR ROLLOUTS
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: rollout-success-rate
+  namespace: demo-apps
+  labels:
+    backstage.io/test-resource: "true"
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    interval: 10s
+    count: 2
+    successCondition: "true"  # Always succeed for demo
+    provider:
+      job:
+        spec:
+          template:
+            spec:
+              # REMOVED: serviceAccountName to avoid permission issues
+              containers:
+              - name: success-check
+                image: curlimages/curl:7.85.0
+                command: ["/bin/sh", "-c"]
+                args:
+                - |
+                  echo "Analyzing service: {{args.service-name}}"
+                  echo "Success rate check: 100%"
+                  sleep 5
+                  echo "Analysis completed successfully"
+                  exit 0
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop: ["ALL"]
+                  runAsNonRoot: true
+                  runAsUser: 1000
+                  runAsGroup: 3000
+                  seccompProfile:
+                    type: "RuntimeDefault"
+              restartPolicy: Never
+          backoffLimit: 0
+
+---

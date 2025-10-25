@@ -1,0 +1,36 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Uncomment this block if you have an NVIDIA GPU on the host
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+    #           driver: nvidia
+    #           count: all
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:latest
+    container_name: openwebui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      # Optional auth for the UI
+      # - WEBUI_AUTH=true
+    volumes:
+      - openwebui-data:/app/backend/data
+    depends_on:
+      - ollama
+
+volumes:
+  ollama-data:
+  openwebui-data:

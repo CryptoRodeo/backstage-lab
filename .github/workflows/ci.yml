@@ -1,0 +1,15 @@
+name: TSSC SBOM Sample Github Workflow
+
+on:
+  push:
+    branches: ["**"]
+
+jobs:
+  ci:
+    name: Run CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Grab SBOM sample
+        run: |
+          curl https://raw.githubusercontent.com/cryptorodeo/backstage-test-data/refs/heads/main/sbom-logs

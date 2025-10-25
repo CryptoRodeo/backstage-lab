@@ -24,23 +24,37 @@ spec:
       initContainers:
         - name: preload-models
           image: ollama/ollama:latest
+          resources:
+            requests:
+              cpu: "2"
+              memory: "16Gi"
+            limits:
+              cpu: "3"
+              memory: "24Gi"
           command:
             - /bin/sh
             - -c
             - |
-              set -e
-              ollama serve &&
+              set -euo pipefail
+              echo "[init] starting ollama serve..." ; ollama serve & SERVER_PID=$!
               sleep 5
-              ollama pull tinyllama:latest
-              ollama pull llama3:8b-instruct
-              ollama pull codellama:7b
-              kill ollama || true
+              echo "[init] Pulling tinyllama:latest..." ; ollama pull tinyllama:latest
+              echo "[init] Pulling llama3:8b-instruct..." ; ollama pull llama3:8b-instruct
+              echo "[init] Pulling codellama:7b..." ; ollama pull codellama:7b
+              echo "[init] stopping ollama (pid=$SERVER_PID)" ; kill "$SERVER_PID" || true
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
       containers:
         - name: ollama
           image: ollama/ollama:latest
+          resources:
+            requests:
+              cpu: "2"
+              memory: "16Gi"
+            limits:
+              cpu: "3"
+              memory: "24Gi"
           ports:
             - name: ollama-host
               containerPort: 11434

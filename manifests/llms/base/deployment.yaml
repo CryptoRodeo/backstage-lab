@@ -4,36 +4,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backstage-test-llms
+  name: backstage-ollama
   namespace: backstage-llms
   labels:
-    app: backstage-test-llms
+    app: backstage-ollama
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backstage-test-llms
+      app: backstage-ollama
   template:
     metadata:
       labels:
-        app: backstage-test-llms
+        app: backstage-ollama
     spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
       initContainers:
-        - name: preload-modals
+        - name: preload-models
           image: ollama/ollama:latest
           command:
             - /bin/sh
             - -c
             - |
+              set -e
               ollama serve &&
               sleep 5
               ollama pull tinyllama:latest
               ollama pull llama3:8b-instruct
               ollama pull codellama:7b
-              kill $(pgrep ollama)
+              kill ollama || true
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
       containers:
         - name: ollama
           image: ollama/ollama:latest
@@ -43,6 +47,14 @@ spec:
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
+          startupProbe:
+            httpGet: { path: /, port: 11434 }
+            failureThreshold: 30
+            periodSeconds: 2
+          readinessProbe:
+            httpGet: { path: /, port: 11434 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
         - name: ollama-data
           persistentVolumeClaim:
@@ -51,4 +63,52 @@ spec:
 #==============================
 # Open Web UI
 #==============================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-webui
+  namespace: backstage-llms
+  labels:
+    app: open-webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-webui
+  template:
+    metadata:
+      labels:
+        app: open-webui
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: open-webui
+          image: ghcr.io/open-webui/open-webui:latest
+          ports:
+            - name: open-webui-http
+              containerPort: 8080
+          env:
+            - name: OLLAMA_BASE_URL
+              value: http://ollama.backstage-llms.svc.cluster.local:11434
+            # Optional
+            # - name: WEBUI_AUTH
+            #   value: true
+          volumeMounts:
+            - name: openwebui-data
+              mountPath: /app/backend/data
+          readinessProbe:
+            httpGet: { path: /, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          # Comment out when GPU available
+          # resources:
+          #   limits:
+          #     nvidia.com/gpu: 1
+      volumes:
+        - name: openwebui-data
+          persistentVolumeClaim:
+            claimName: openwebui-data
+
 

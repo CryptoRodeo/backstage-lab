@@ -1,0 +1,63 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backstage-rollouts-testing
+  labels:
+    backstage.io/rbac: "rollouts-testing"
+rules:
+# Broad permissions like your existing setup
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# Explicit Argo Rollouts permissions for clarity
+- apiGroups:
+  - argoproj.io
+  resources:
+  - rollouts
+  - analysisruns
+  - analysistemplates
+  - experiments
+  - clusteranalysistemplates
+  verbs:
+  - get
+  - list
+  - watch
+# Standard Kubernetes resources that rollouts create
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - configmaps
+  - secrets
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+# Batch resources for analysis runs
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+
+

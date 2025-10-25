@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backstage-argocd
+  labels:
+    name: backstage-argocd
+    backstage.io/managed-by: rollouts-testing

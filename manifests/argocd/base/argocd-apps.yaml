@@ -1,183 +1,74 @@
 # =======================================================================
-# NAMESPACE CREATION
+# Basic ArgoCD Apps
 # =======================================================================
-apiVersion: v1
-kind: Namespace
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: demo-apps
-  labels:
-    name: demo-apps
-    backstage.io/managed-by: rollouts-testing
----
-
-# =======================================================================
-# CLUSTERROLE
-# =======================================================================
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: backstage-rollouts-testing
-  labels:
-    backstage.io/rbac: "rollouts-testing"
-rules:
-# Broad permissions like your existing setup
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
-# Explicit Argo Rollouts permissions for clarity
-- apiGroups:
-  - argoproj.io
-  resources:
-  - rollouts
-  - analysisruns
-  - analysistemplates
-  - experiments
-  - clusteranalysistemplates
-  verbs:
-  - get
-  - list
-  - watch
-# Standard Kubernetes resources that rollouts create
-- apiGroups:
-  - apps
-  resources:
-  - replicasets
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - services
-  - configmaps
-  - secrets
-  - events
-  verbs:
-  - get
-  - list
-  - watch
-# Batch resources for analysis runs
-- apiGroups:
-  - batch
-  resources:
-  - jobs
-  - cronjobs
-  verbs:
-  - get
-  - list
-  - watch
-
----
-# =======================================================================
-# SERVICE ACCOUNT
-# =======================================================================
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: backstage-rollouts
-  namespace: demo-apps
-  labels:
-    backstage.io/service-account: "rollouts-testing"
-
----
-# =======================================================================
-# CLUSTERROLEBINDING
-# =======================================================================
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: backstage-rollouts-testing-binding
-  labels:
-    backstage.io/rbac: "rollouts-testing"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: backstage-rollouts-testing
-subjects:
-- kind: ServiceAccount
-  name: backstage-rollouts
-  namespace: demo-apps
-
----
-# =======================================================================
-# SERVICE ACCOUNT TOKEN
-# =======================================================================
-apiVersion: v1
-kind: Secret
-type: kubernetes.io/service-account-token
-metadata:
-  name: backstage-rollouts-token
-  namespace: demo-apps
-  annotations:
-    kubernetes.io/service-account.name: backstage-rollouts
-  labels:
-    backstage.io/token: "rollouts-testing"
-
----
-# =======================================================================
-# ARGOCD APPLICATIONS
-# =======================================================================
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  labels:
-    app: backstage
-  name: guestbook
-  namespace: argocd
-spec:
-  destination:
-    namespace: demo-apps
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - path: ./argocd/apps/kustomize-guestbook/
-    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
-    targetRevision: main
-  - path: ./argocd/apps/jsonnet-guestbook-tla/
-    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
-    targetRevision: main
-  - path: ./argocd/apps/jsonnet-guestbook/
-    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
-    targetRevision: main
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  labels:
-    app: backstage
   name: basic-app
-  namespace: argocd
+  namespace: demo-apps
+  labels:
+    environment: staging
+    app: nginx
+    type: demo
 spec:
-  destination:
-    namespace: demo-apps
-    server: https://kubernetes.default.svc
-  project: default
-  sources:
-  - path: ./argocd/apps/basic-app/
-    repoURL: https://github.com/cryptorodeo/backstage-test-data.git
-    targetRevision: main
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: basic-app-svc
+  namespace: demo-apps
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guestbook-ui
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: guestbook-ui
+  template:
+    metadata:
+      labels:
+        app: guestbook-ui
+    spec:
+      containers:
+      - image: gcr.io/heptio-images/ks-guestbook-demo:0.1
+        name: guestbook-ui
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1	
+kind: Service	
+metadata:	
+  name: guestbook-ui	
+spec:	
+  ports:	
+  - port: 80	
+    targetPort: 80	
+  selector:	
+    app: guestbook-ui
 ---
 # =======================================================================
 # CANARY ROLLOUT FOR TRANSLATION TESTING
@@ -187,7 +78,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: rollout-canary-translation-test
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     app.kubernetes.io/instance: basic-app
     app: rollout-canary
@@ -259,7 +150,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: rollout-bluegreen-translation-test
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     app.kubernetes.io/instance: basic-app
     app: rollout-bluegreen
@@ -332,7 +223,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rollout-canary-stable
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
     backstage.io/kubernetes-id: guestbook
@@ -352,7 +243,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rollout-canary-canary
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
     backstage.io/kubernetes-id: guestbook
@@ -375,7 +266,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rollout-bluegreen-active
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
     backstage.io/kubernetes-id: basic-app
@@ -395,7 +286,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: rollout-bluegreen-preview
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
     backstage.io/kubernetes-id: basic-app
@@ -418,7 +309,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: rollout-success-rate
-  namespace: demo-apps
+  namespace: backstage-argocd
   labels:
     backstage.io/test-resource: "true"
 spec:

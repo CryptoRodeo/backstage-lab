@@ -1,57 +1,10 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: tekton-pipelines
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: backstage-read-only
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: backstage-tekton
-  namespace: tekton-pipelines
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: backstage-read-only-binding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: backstage-read-only
-subjects:
-- kind: ServiceAccount
-  name: backstage-tekton
-  namespace: tekton-pipelines
----
-apiVersion: v1
-kind: Secret
-type: kubernetes.io/service-account-token
-metadata:
-  name: backstage-tekton-token
-  namespace: tekton-pipelines
-  annotations:
-    kubernetes.io/service-account.name: backstage-tekton
----
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   labels:
     backstage.io/kubernetes-id: rhtap
   name: simple-pipeline
-  namespace: tekton-pipelines
+  namespace: backstage-tekton-pipelines
 spec:
   tasks:
   - name: echo-task
@@ -79,7 +32,7 @@ metadata:
     backstage.io/kubernetes-id: rhtap
     tekton.dev/pipeline: simple-pipeline
   name: simple-pipeline-run
-  namespace: tekton-pipelines
+  namespace: backstage-tekton-pipelines
 spec:
   pipelineRef:
     name: simple-pipeline
@@ -94,7 +47,7 @@ metadata:
   labels:
     backstage.io/kubernetes-id: rhtap
   name: show-sbom-demo
-  namespace: tekton-pipelines
+  namespace: backstage-tekton-pipelines
 spec:
   workspaces:
   - name:  shared-data
@@ -194,7 +147,7 @@ metadata:
     backstage.io/kubernetes-id: rhtap
     tekton.dev/pipeline: show-sbom-demo
   name: show-sbom-demo-run
-  namespace: tekton-pipelines
+  namespace: backstage-tekton-pipelines
 spec:
   pipelineRef:
     name: show-sbom-demo

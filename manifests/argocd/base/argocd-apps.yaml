@@ -1,0 +1,352 @@
+# =======================================================================
+# Basic ArgoCD Apps
+# =======================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: basic-app
+  namespace: demo-apps
+  labels:
+    environment: staging
+    app: nginx
+    type: demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: basic-app-svc
+  namespace: demo-apps
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guestbook-ui
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: guestbook-ui
+  template:
+    metadata:
+      labels:
+        app: guestbook-ui
+    spec:
+      containers:
+      - image: gcr.io/heptio-images/ks-guestbook-demo:0.1
+        name: guestbook-ui
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1	
+kind: Service	
+metadata:	
+  name: guestbook-ui	
+spec:	
+  ports:	
+  - port: 80	
+    targetPort: 80	
+  selector:	
+    app: guestbook-ui
+---
+# =======================================================================
+# CANARY ROLLOUT FOR TRANSLATION TESTING
+# This will be properly managed and create ReplicaSets
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout-canary-translation-test
+  namespace: backstage-argocd
+  labels:
+    app.kubernetes.io/instance: basic-app
+    app: rollout-canary
+    backstage.io/kubernetes-id: rollouts-canary-test  # For Backstage discovery
+    backstage.io/test-resource: "true"
+  annotations:
+    rollout.argoproj.io/revision: "1"
+    backstage.io/description: "Canary rollout for testing translations"
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      canaryService: rollout-canary-canary
+      stableService: rollout-canary-stable
+      steps:
+      - setWeight: 20
+      - pause: 
+          duration: 10s
+      - setWeight: 40  
+      - pause:
+          duration: 10s
+      - setWeight: 60
+      - pause:
+          duration: 10s
+      - setWeight: 80
+      - pause:
+          duration: 10s
+      - setWeight: 100
+  selector:
+    matchLabels:
+      app: canary-demo
+      app.kubernetes.io/instance: basic-app-with-rollouts 
+  template:
+    metadata:
+      labels:
+        app: canary-demo
+        app.kubernetes.io/instance: basic-app-with-rollouts 
+        backstage.io/kubernetes-id: rollouts-canary-test
+    spec:
+      containers:
+      - name: rollouts-demo
+        image: argoproj/rollouts-demo:blue
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+          limits:
+            memory: 128Mi
+            cpu: 100m
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 3000
+          seccompProfile:
+            type: "RuntimeDefault"
+
+---
+# =======================================================================
+# BLUE-GREEN ROLLOUT FOR TRANSLATION TESTING
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout-bluegreen-translation-test
+  namespace: backstage-argocd
+  labels:
+    app.kubernetes.io/instance: basic-app
+    app: rollout-bluegreen
+    backstage.io/kubernetes-id: rollouts-bluegreen-test  # For Backstage discovery
+    backstage.io/test-resource: "true"
+  annotations:
+    rollout.argoproj.io/revision: "1"
+    backstage.io/description: "Blue-Green rollout for testing translations"
+spec:
+  replicas: 2
+  strategy:
+    blueGreen:
+      activeService: rollout-bluegreen-active
+      previewService: rollout-bluegreen-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+      prePromotionAnalysis:
+        templates:
+        - templateName: rollout-success-rate
+        args:
+        - name: service-name
+          value: rollout-bluegreen-preview
+      postPromotionAnalysis:
+        templates:
+        - templateName: rollout-success-rate
+        args:
+        - name: service-name
+          value: rollout-bluegreen-active
+  selector:
+    matchLabels:
+      app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match template
+      app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+  template:
+    metadata:
+      labels:
+        app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match services
+        app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+        backstage.io/kubernetes-id: rollouts-bluegreen-test
+    spec:
+      # REMOVED: serviceAccountName to avoid permission issues
+      containers:
+      - name: rollouts-demo
+        image: argoproj/rollouts-demo:blue
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+          limits:
+            memory: 128Mi
+            cpu: 100m
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 3000
+          seccompProfile:
+            type: "RuntimeDefault"
+
+---
+# =======================================================================
+# SERVICES FOR CANARY ROLLOUT
+# =======================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-canary-stable
+  namespace: backstage-argocd
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: guestbook
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: canary-demo  # FIXED: Changed from rollout-canary to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-canary-canary
+  namespace: backstage-argocd
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: guestbook
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: canary-demo  # FIXED: Changed from rollout-canary to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+# =======================================================================
+# SERVICES FOR BLUE-GREEN ROLLOUT
+# =======================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-bluegreen-active
+  namespace: backstage-argocd
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: basic-app
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-bluegreen-preview
+  namespace: backstage-argocd
+  labels:
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+    backstage.io/kubernetes-id: basic-app
+    backstage.io/test-resource: "true"
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: bluegreen-demo  # FIXED: Changed from rollout-bluegreen to match pods
+    app.kubernetes.io/instance: basic-app-with-rollouts  # FIXED: Consistent label
+
+---
+# =======================================================================
+# ANALYSIS TEMPLATE FOR ROLLOUTS
+# =======================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: rollout-success-rate
+  namespace: backstage-argocd
+  labels:
+    backstage.io/test-resource: "true"
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    interval: 10s
+    count: 2
+    successCondition: "true"  # Always succeed for demo
+    provider:
+      job:
+        spec:
+          template:
+            spec:
+              # REMOVED: serviceAccountName to avoid permission issues
+              containers:
+              - name: success-check
+                image: curlimages/curl:7.85.0
+                command: ["/bin/sh", "-c"]
+                args:
+                - |
+                  echo "Analyzing service: {{args.service-name}}"
+                  echo "Success rate check: 100%"
+                  sleep 5
+                  echo "Analysis completed successfully"
+                  exit 0
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop: ["ALL"]
+                  runAsNonRoot: true
+                  runAsUser: 1000
+                  runAsGroup: 3000
+                  seccompProfile:
+                    type: "RuntimeDefault"
+              restartPolicy: Never
+          backoffLimit: 0
+
+---

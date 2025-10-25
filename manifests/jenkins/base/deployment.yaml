@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage-test-jenkins
+  namespace: backstage-jenkins
+  labels:
+    app: backstage-test-jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backstage-test-jenkins
+  template:
+    metadata:
+      labels:
+        app: backstage-test-jenkins
+    spec:
+      securityContext:
+        fsGroup: 1000    # Jenkins writes to /var/jenkins_home
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: backstage-jenkins
+          image: jenkins/jenkins:lts-jdk17
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: agent
+              containerPort: 50000
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-home

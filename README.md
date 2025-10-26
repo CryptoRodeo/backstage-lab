@@ -1,6 +1,8 @@
-# Backstage Test Data
+# Backstage Lab 🧪
 
-This GitOps repository provides Kubernetes manifests for services used to test the following [Backstage](https://backstage.io/) plugins:
+A GitOps-managed Kubernetes lab for testing Backstage plugins.
+
+Used to test the following [Backstage](https://backstage.io/) plugins:
 
 - [Jenkins](https://github.com/backstage/community-plugins/tree/main/workspaces/jenkins)
 - [ArgoCD](https://github.com/backstage/community-plugins/tree/main/workspaces/redhat-argocd)

@@ -91,7 +91,7 @@ spec:
         script: |
           #!/bin/sh
           # Save link to SBOM scans in results
-          SBOM_DATA_LINK='https://raw.githubusercontent.com/cryptorodeo/backstage-test-data/refs/heads/main/sbom-logs'
+          SBOM_DATA_LINK='https://raw.githubusercontent.com/cryptorodeo/backstage-lab/refs/heads/main/sbom-logs'
           echo -n "$SBOM_DATA_LINK" > $(results.LINK_TO_SBOM.path)
           # Fetch the data and save to file
           curl "$SBOM_DATA_LINK" > $(workspaces.sbom-output.path)/sbom.json

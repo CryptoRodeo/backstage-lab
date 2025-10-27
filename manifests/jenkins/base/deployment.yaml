@@ -20,7 +20,7 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       containers:
         - name: backstage-jenkins
-          image: jenkins/jenkins:lts-jdk17
+          image: docker pull ghcr.io/cryptorodeo/backstage-lab/jenkins:latest
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000

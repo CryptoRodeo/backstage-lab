@@ -1,0 +1,19 @@
+jobs:
+  - script: >
+      pipelineJob('backstage-lab') {
+        definition {
+          cps {
+            script("""pipeline {
+              agent any
+              stages {
+                stage('get-rhtap-logs') {
+                  steps {
+                    sh 'curl -sSfL https://raw.githubusercontent.com/CryptoRodeo/backstage-lab/main/sbom-logs'
+                  }
+                }
+              }
+            }""")
+            sandbox(true)
+          }
+        }
+      }

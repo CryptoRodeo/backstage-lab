@@ -10,7 +10,7 @@ jenkins:
 
 unclassified:
   location:
-    url: "http://localhost:8080"
+    url: "http://backstage.lab:8080" # edit /etc/hosts , map server IP to hostname (e.g. backstage.lab)
 
 appearance:
   themeManager:

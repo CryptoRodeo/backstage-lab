@@ -1,6 +1,6 @@
 jobs:
   - script: >
-      pipelineJob('backstage-lab') {
+      pipelineJob('backstage-lab-basic') {
         definition {
           cps {
             script("""pipeline {
@@ -14,6 +14,21 @@ jobs:
               }
             }""")
             sandbox(true)
+          }
+        }
+      }
+
+  - script: >
+      multibranchPipelineJob('backstage-lab') {
+        branchSources {
+          git {
+            id('backstage-lab')
+            remote('https://github.com/cryptorodeo/backstage-lab.git')
+          }
+        }
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath('manifests/jenkins/Jenkinsfile')
           }
         }
       }

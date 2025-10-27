@@ -12,7 +12,7 @@ spec:
           - path: manifests/*/overlays/*
   template:
     metadata:
-      name: '{{path[1]}}-{{path.basename}}'
+      name: '{{path.basename}}/backstage-{{path[1]}}'
     spec:
       project: default
       destination:

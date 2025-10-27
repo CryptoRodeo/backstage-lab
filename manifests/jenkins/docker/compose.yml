@@ -1,0 +1,15 @@
+services:
+  jenkins:
+    image: ghcr.io/cryptorodeo/backstage-lab/jenkins:latest
+ #   build: .
+    container_name: backstage-lab-jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - backstage_lab_jenkins_logs:/var/jenkins_home
+    restart: on-failure
+
+volumes:
+  backstage_lab_jenkins_logs:
+    driver: local

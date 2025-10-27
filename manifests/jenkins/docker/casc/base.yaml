@@ -1,0 +1,18 @@
+
+jenkins:
+  systemMessage: "Backstage Lab Jenkins (ArgoCD-managed) 🚀"
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+
+unclassified:
+  location:
+    url: "http://localhost:8080"
+
+appearance:
+  themeManager:
+    disableUserThemes: true
+    theme: "dark"

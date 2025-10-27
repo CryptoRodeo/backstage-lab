@@ -25,6 +25,13 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
+          env:
+            - name: CASC_JENKINS_CONFIG
+              value: /var/jenkins_home/casc
+            - name: JENKINS_OPTS
+              value: "--argumentsRealm.passwd.admin=admin --argumentsRealm.roles.admin=admin"
+            - name: JAVA_OPTS
+              value: "-Djenkins.install.runSetupWizard=false"
           ports:
             - name: http
               containerPort: 8080

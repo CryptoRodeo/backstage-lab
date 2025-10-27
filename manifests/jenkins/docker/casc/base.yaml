@@ -1,4 +1,3 @@
-
 jenkins:
   systemMessage: "Backstage Lab Jenkins (ArgoCD-managed) 🚀"
   securityRealm:
@@ -10,7 +9,7 @@ jenkins:
 
 unclassified:
   location:
-    url: "http://backstage.lab:8080" # edit /etc/hosts , map server IP to hostname (e.g. backstage.lab)
+    url: "http://backstage.lab:8080/" # edit /etc/hosts , map server IP to hostname (e.g. backstage.lab)
 
 appearance:
   themeManager:

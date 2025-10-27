@@ -30,6 +30,7 @@ I personally use [K3s](https://k3s.io/), but this setup also works with [Minikub
 ## 📁 Repository Structure
 
 ```bash
+
 ├── apps
 │   └── applicationset.yaml
 ├── manifests
@@ -51,6 +52,13 @@ I personally use [K3s](https://k3s.io/), but this setup also works with [Minikub
 │   │   │   ├── namespace.yaml
 │   │   │   ├── pvc.yaml
 │   │   │   └── service.yaml
+│   │   ├── docker
+│   │   │   ├── casc
+│   │   │   │   ├── base.yaml
+│   │   │   │   └── jobs.yml
+│   │   │   ├── compose.yml
+│   │   │   ├── Dockerfile
+│   │   │   └── plugins.txt
 │   │   └── overlays
 │   │       └── defaults
 │   │           └── kustomization.yaml
@@ -75,6 +83,10 @@ I personally use [K3s](https://k3s.io/), but this setup also works with [Minikub
 │       └── overlays
 │           └── defaults
 │               └── kustomization.yaml
+├── README.md
+└── test-artifacts
+    ├── Jenkinsfile
+    └── sbom-logs
 ````
 
 Each service folder contains a base manifest and environment overlays managed by ArgoCD ApplicationSets.

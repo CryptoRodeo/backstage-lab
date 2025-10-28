@@ -8,7 +8,7 @@ jobs:
               stages {
                 stage('get-rhtap-logs') {
                   steps {
-                    sh 'curl -sSfL https://raw.githubusercontent.com/CryptoRodeo/backstage-lab/main/sbom-logs'
+                    sh 'curl -sSfL https://raw.githubusercontent.com/CryptoRodeo/backstage-lab/main/test-artifacts/sbom-logs'
                   }
                 }
               }
@@ -28,7 +28,7 @@ jobs:
         }
         factory {
           workflowBranchProjectFactory {
-            scriptPath('manifests/jenkins/Jenkinsfile')
+            scriptPath('test-artifacts/Jenkinsfile')
           }
         }
       }

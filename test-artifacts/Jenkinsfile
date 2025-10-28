@@ -5,7 +5,7 @@ pipeline {
             steps {
                 script  {
                      sh  '''
-                          curl https://raw.githubusercontent.com/cryptorodeo/backstage-lab/refs/heads/main/sbom-logs
+                          curl https://raw.githubusercontent.com/cryptorodeo/backstage-lab/refs/heads/main/test-artifacts/sbom-logs
                         '''
                     }
                 }

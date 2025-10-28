@@ -71,8 +71,7 @@ spec:
     app: guestbook-ui
 ---
 # =======================================================================
-# CANARY ROLLOUT FOR TRANSLATION TESTING
-# This will be properly managed and create ReplicaSets
+# CANARY ROLLOUT
 # =======================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -144,7 +143,7 @@ spec:
 
 ---
 # =======================================================================
-# BLUE-GREEN ROLLOUT FOR TRANSLATION TESTING
+# BLUE-GREEN ROLLOUT
 # =======================================================================
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
@@ -190,7 +189,6 @@ spec:
         app.kubernetes.io/instance: basic-app-with-rollouts  
         backstage.io/kubernetes-id: rollouts-bluegreen-test
     spec:
-      # REMOVED: serviceAccountName to avoid permission issues
       containers:
       - name: rollouts-demo
         image: argoproj/rollouts-demo:blue

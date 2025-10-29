@@ -4,13 +4,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: basic-app-with-rollouts
+  name: backstage-argocd-defaults
   namespace: demo-apps
   labels:
     environment: staging
     app: nginx
     type: demo
-    app.kubernetes.io/instance: basic-app-with-rollouts # Should match one of the deployment names
+    app.kubernetes.io/instance: backstage-argocd-defaults # Should match one of the app names
 spec:
   replicas: 2
   selector:
@@ -82,7 +82,7 @@ metadata:
   name: rollout-canary-translation-test
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts # Should match one of the deployment names
+    app.kubernetes.io/instance: backstage-argocd-defaults # Should match one of the app names
     app: rollout-canary
     backstage.io/kubernetes-id: rollouts-canary-test
     backstage.io/test-resource: "true"
@@ -112,12 +112,12 @@ spec:
   selector:
     matchLabels:
       app: canary-demo
-      app.kubernetes.io/instance: basic-app-with-rollouts
+      app.kubernetes.io/instance: backstage-argocd-defaults
   template:
     metadata:
       labels:
         app: canary-demo
-        app.kubernetes.io/instance: basic-app-with-rollouts
+        app.kubernetes.io/instance: backstage-argocd-defaults
         backstage.io/kubernetes-id: rollouts-canary-test
     spec:
       containers:
@@ -153,7 +153,7 @@ metadata:
   name: rollout-bluegreen-translation-test
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts # Should match one of the deployment names
+    app.kubernetes.io/instance: backstage-argocd-defaults # Should match one of the app names
     app: rollout-bluegreen
     backstage.io/kubernetes-id: rollouts-bluegreen-test
     backstage.io/test-resource: "true"
@@ -171,12 +171,12 @@ spec:
   selector:
     matchLabels:
       app: bluegreen-demo
-      app.kubernetes.io/instance: basic-app-with-rollouts
+      app.kubernetes.io/instance: backstage-argocd-defaults
   template:
     metadata:
       labels:
         app: bluegreen-demo
-        app.kubernetes.io/instance: basic-app-with-rollouts
+        app.kubernetes.io/instance: backstage-argocd-defaults
         backstage.io/kubernetes-id: rollouts-bluegreen-test
     spec:
       containers:
@@ -212,7 +212,7 @@ metadata:
   name: rollout-canary-stable
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
     backstage.io/kubernetes-id: rollouts-canary-test
     backstage.io/test-resource: "true"
 spec:
@@ -223,7 +223,7 @@ spec:
       name: http
   selector:
     app: canary-demo
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
 ---
 apiVersion: v1
 kind: Service
@@ -231,7 +231,7 @@ metadata:
   name: rollout-canary-canary
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
     backstage.io/kubernetes-id: rollouts-canary-test
     backstage.io/test-resource: "true"
 spec:
@@ -242,7 +242,7 @@ spec:
       name: http
   selector:
     app: canary-demo
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
 ---
 # =======================================================================
 # SERVICES FOR BLUE-GREEN ROLLOUT
@@ -253,7 +253,7 @@ metadata:
   name: rollout-bluegreen-active
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
     backstage.io/kubernetes-id: rollouts-bluegreen-test
     backstage.io/test-resource: "true"
 spec:
@@ -264,7 +264,7 @@ spec:
       name: http
   selector:
     app: bluegreen-demo
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
 ---
 apiVersion: v1
 kind: Service
@@ -272,7 +272,7 @@ metadata:
   name: rollout-bluegreen-preview
   namespace: backstage-argocd
   labels:
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
     backstage.io/kubernetes-id: rollouts-bluegreen-test
     backstage.io/test-resource: "true"
 spec:
@@ -283,6 +283,6 @@ spec:
       name: http
   selector:
     app: bluegreen-demo
-    app.kubernetes.io/instance: basic-app-with-rollouts
+    app.kubernetes.io/instance: backstage-argocd-defaults
 ---
 

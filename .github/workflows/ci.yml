@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Grab SBOM sample
         run: |
-          curl https://raw.githubusercontent.com/cryptorodeo/backstage-test-data/refs/heads/main/sbom-logs
+          curl https://raw.githubusercontent.com/cryptorodeo/backstage-lab/refs/heads/main/test-artifacts/sbom-logs

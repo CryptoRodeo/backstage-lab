@@ -8,6 +8,7 @@ stages:
 run_ci:
   stage: ci
   image: curlimages/curl:latest           # ensures curl is available
+  tags: [shared-podman]
   script:
     - echo "Grabbing SBOM sample..."
     - curl -sS https://gitlab.cee.redhat.com/bramos/backstage-lab/-/raw/main/test-artifacts/sbom-logs -o sbom-logs

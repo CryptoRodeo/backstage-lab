@@ -9,6 +9,8 @@ Used to test the following [Backstage](https://backstage.io/) plugins:
 - [GitHub Actions](https://github.com/backstage/community-plugins/tree/main/workspaces/github-actions)
 - [Tekton](https://github.com/backstage/community-plugins/tree/main/workspaces/tekton)
 - [MCP Chat](https://github.com/backstage/community-plugins/tree/main/workspaces/mcp-chat)
+- [Gitlab](https://github.com/immobiliare/backstage-plugin-gitlab)
+- [Multi Source Security Viewer](https://github.com/backstage/community-plugins/tree/main/workspaces/multi-source-security-viewer/plugins/multi-source-security-viewer)
 
 ---
 
@@ -190,6 +192,45 @@ kubectl get applications -n argocd
 Once synced, ArgoCD will deploy all services defined under `manifests/`.
 
 ---
+
+## 🖥️ After setting up
+You can run the `after-setup.sh` script to get information on:
+- ArgoCD Serve port
+- ArgoCD Admin creds
+- ArgoCD Service Account token
+- Tekton Service Account Token
+- Service Ports
+
+```bash
+------------------------------
+Backstage Lab 🧪 - After Setup
+------------------------------
+🖥️ ArgoCD Server port 30314
+
+🔓 ArgoCD Admin creds
+Username: admin
+Password: <password>
+
+🔄 ArgoCD Service Account
+Name: backstage-rollouts
+🪙 Token
+
+<token>
+
+⚓ Service Ports
+jenkins     8080:31862/TCP,50000:30806/TCP
+ollama      11434:31861/TCP
+open-webui  3000:31343/TCP
+
+⚗️ Tekton Service Account:
+Name: backstage-tekton
+🪙 Token
+
+<token>
+
+------------------------------
+```
+
 
 ## 🌐 Accessing Your Services
 

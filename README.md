@@ -20,12 +20,13 @@ This repository installs and manages the following services through ArgoCD:
 
 - Jenkins
 - ArgoCD
-- GitHub Workflow
 - Tekton Pipelines
 - Ollama, Open WebUI, and various LLM models
 
 These manifests run on any Kubernetes cluster with a load balancer.  
 I personally use [K3s](https://k3s.io/), but this setup also works with [Minikube](https://minikube.sigs.k8s.io/) or other distros.
+
+It also provides **Github** and **Gitlab** workflows with test data.
 
 ---
 

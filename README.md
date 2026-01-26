@@ -8,9 +8,6 @@ Used to test the following [Backstage](https://backstage.io/) plugins:
 - [ArgoCD](https://github.com/backstage/community-plugins/tree/main/workspaces/redhat-argocd)
 - [GitHub Actions](https://github.com/backstage/community-plugins/tree/main/workspaces/github-actions)
 - [Tekton](https://github.com/backstage/community-plugins/tree/main/workspaces/tekton)
-- [MCP Chat](https://github.com/backstage/community-plugins/tree/main/workspaces/mcp-chat)
-- [Gitlab](https://github.com/immobiliare/backstage-plugin-gitlab)
-- [Multi Source Security Viewer](https://github.com/backstage/community-plugins/tree/main/workspaces/multi-source-security-viewer/plugins/multi-source-security-viewer)
 
 ---
 
@@ -21,9 +18,8 @@ This repository installs and manages the following services through ArgoCD:
 - Jenkins
 - ArgoCD
 - Tekton Pipelines
-- Ollama, Open WebUI, and various LLM models
 
-These manifests run on any Kubernetes cluster with a load balancer.  
+These manifests run on any Kubernetes cluster with a load balancer.
 I personally use [K3s](https://k3s.io/), but this setup also works with [Minikube](https://minikube.sigs.k8s.io/) or other distros.
 
 It also provides **Github** and **Gitlab** workflows with test data.
@@ -65,16 +61,6 @@ It also provides **Github** and **Gitlab** workflows with test data.
 │   │   └── overlays
 │   │       └── defaults
 │   │           └── kustomization.yaml
-│   ├── llms
-│   │   ├── base
-│   │   │   ├── deployment.yaml
-│   │   │   ├── kustomization.yaml
-│   │   │   ├── namespace.yaml
-│   │   │   ├── pvc.yaml
-│   │   │   └── service.yaml
-│   │   └── overlays
-│   │       └── defaults
-│   │           └── kustomization.yaml
 │   └── tekton
 │       ├── base
 │       │   ├── kustomization.yaml
@@ -90,6 +76,7 @@ It also provides **Github** and **Gitlab** workflows with test data.
 └── test-artifacts
     ├── Jenkinsfile
     └── sbom-logs
+
 ````
 
 Each service folder contains a base manifest and environment overlays managed by ArgoCD ApplicationSets.
@@ -247,7 +234,6 @@ kubectl get svc -A -o wide
 | ---------- | ----- |
 | Jenkins    | 8080  |
 | Open WebUI | 3000  |
-| Ollama     | 11434 |
 
 ---
 
@@ -260,7 +246,6 @@ graph TD
     K8sCluster --> Jenkins
     K8sCluster --> ArgoCD
     K8sCluster --> Tekton
-    K8sCluster --> Ollama
     K8sCluster --> OpenWebUI
 ```
 
@@ -272,7 +257,7 @@ To remove all GitOps-managed resources:
 
 ```bash
 kubectl delete -f manifests/applicationset.yaml -n argocd
-kubectl delete ns backstage-jenkins backstage-llms backstage-tekton
+kubectl delete ns backstage-jenkins backstage-tekton
 ```
 
 ---

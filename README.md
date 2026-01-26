@@ -207,8 +207,6 @@ Name: backstage-rollouts
 
 ⚓ Service Ports
 jenkins     8080:31862/TCP,50000:30806/TCP
-ollama      11434:31861/TCP
-open-webui  3000:31343/TCP
 
 ⚗️ Tekton Service Account:
 Name: backstage-tekton
@@ -233,7 +231,6 @@ kubectl get svc -A -o wide
 | Service    | Port  |
 | ---------- | ----- |
 | Jenkins    | 8080  |
-| Open WebUI | 3000  |
 
 ---
 
@@ -246,7 +243,6 @@ graph TD
     K8sCluster --> Jenkins
     K8sCluster --> ArgoCD
     K8sCluster --> Tekton
-    K8sCluster --> OpenWebUI
 ```
 
 ---
